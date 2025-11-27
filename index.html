@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonFit Stat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              neon: { cyan: '#06b6d4', magenta: '#d946ef', lime: '#84cc16' }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              display: ['Orbitron', 'sans-serif'],
+            },
+            animation: {
+              'spin-slow': 'spin 10s linear infinite',
+              'spin-reverse-slow': 'spin 15s linear infinite reverse',
+              'slideIn': 'slideIn 0.5s ease-out forwards',
+              'shimmer': 'shimmer 2s infinite',
+              'scan': 'scan 4s ease-in-out infinite',
+            },
+            keyframes: {
+              slideIn: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              shimmer: {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(100%)' },
+              },
+              scan: {
+                '0%, 100%': { transform: 'translateY(-100%)', opacity: '0' },
+                '50%': { opacity: '0.3' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background: #010101; color: #fff; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+</body>
+</html>

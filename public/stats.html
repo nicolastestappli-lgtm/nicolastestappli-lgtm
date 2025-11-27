@@ -1,0 +1,616 @@
+<<<<<<< HEAD
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonFit - Statistics Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { neon: { cyan: '#06b6d4', magenta: '#d946ef', lime: '#84cc16' } },
+            fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'], display: ['Orbitron', 'sans-serif'] },
+            animation: { 'spin-slow': 'spin 10s linear infinite', 'spin-reverse-slow': 'spin 15s linear infinite reverse', 'slideIn': 'slideIn 0.5s ease-out forwards', 'shimmer': 'shimmer 2s infinite', 'scan': 'scan 4s ease-in-out infinite', 'fade-in': 'fadeIn 0.3s ease-out forwards', 'blink': 'blink 1s infinite' },
+            keyframes: { slideIn: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }, shimmer: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(100%)' } }, scan: { '0%, 100%': { transform: 'translateY(-100%)', opacity: '0' }, '50%': { opacity: '0.3' } }, fadeIn: { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } }, blink: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } } }
+          }
+        }
+      }
+    </script>
+    <script type="importmap">{ "imports": { "react": "https://esm.sh/react@18.2.0", "react-dom/client": "https://esm.sh/react-dom@18.2.0/client", "lucide-react": "https://esm.sh/lucide-react@0.300.0" } }</script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>body { background: #010101; color: #fff; overflow-x: hidden; } ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }</style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Brain, Zap, Activity, Target, CheckCircle2, Layers, Terminal, AlertTriangle, ChevronRight, Gauge, TrendingUp, Clock } from 'lucide-react';
+
+        const VolumeGaugeV28 = ({ volume, maxVolume = 25000, optimalMin = 15000, optimalMax = 22000, stats }) => {
+            const percentage = Math.min(1, volume / maxVolume);
+            const density = volume / (stats.tut / 60 || 1);
+            const isOptimal = volume >= optimalMin && volume <= optimalMax;
+            const isDanger = volume > optimalMax;
+            const neuralLoad = Math.min(1, Math.pow(percentage, 1.5) + (Math.random() * 0.05));
+
+            const [aiDisplay, setAiDisplay] = useState("");
+            const [aiState, setAiState] = useState('SCAN');
+            const textState = useRef({ queue: [], currentText: "", charIndex: 0, timer: null });
+
+            useEffect(() => {
+                const newQueue = [
+                    "INITIALIZING OMNI-MONITOR...",
+                    `KINETIC DENSITY: ${density.toFixed(0)} KG/MIN`,
+                    isDanger ? "CRITICAL: NEURAL INTEGRITY COMPROMISED" : 
+                    isOptimal ? "HYPERTROPHY ZONE: OPTIMAL LOCK" : 
+                    "ACCUMULATING BIO-MECHANICAL LOAD...",
+                    "SYSTEM STATUS: RECORDING"
+                ];
+                if (isDanger) setAiState('ALERT'); else if (isOptimal) setAiState('OPTIMAL'); else setAiState('STABLE');
+                textState.current.queue = newQueue;
+                textState.current.charIndex = 0;
+                textState.current.currentText = "";
+            }, [isDanger, isOptimal, density]);
+
+            useEffect(() => {
+                let msgIndex = 0;
+                const typeStep = () => {
+                    const queue = textState.current.queue;
+                    const currentMsg = queue[msgIndex % queue.length];
+                    if (textState.current.charIndex < currentMsg.length) {
+                        textState.current.currentText += currentMsg.charAt(textState.current.charIndex);
+                        setAiDisplay(textState.current.currentText);
+                        textState.current.charIndex++;
+                        textState.current.timer = setTimeout(typeStep, 30);
+                    } else {
+                        textState.current.timer = setTimeout(() => {
+                            textState.current.charIndex = 0;
+                            textState.current.currentText = "";
+                            msgIndex++;
+                            typeStep();
+                        }, 3000);
+                    }
+                };
+                typeStep();
+                return () => clearTimeout(textState.current.timer);
+            }, []);
+
+            const [displayVol, setDisplayVol] = useState(0);
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    setDisplayVol(prev => {
+                        const diff = volume - prev;
+                        return Math.abs(diff) < 5 ? volume : prev + diff * 0.2;
+                    });
+                }, 20);
+                return () => clearInterval(interval);
+            }, [volume]);
+
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animId;
+                let time = 0;
+                const curvePoints = Array(50).fill(0);
+
+                const render = () => {
+                    const w = canvas.width / (window.devicePixelRatio || 1);
+                    const h = canvas.height / (window.devicePixelRatio || 1);
+                    const cx = w / 2;
+                    const cy = h / 2;
+                    const radius = 110;
+
+                    ctx.clearRect(0, 0, w, h);
+                    time += 0.02;
+
+                    if (Math.random() > 0.5) { curvePoints.shift(); curvePoints.push(percentage * 0.8 + (Math.random() * 0.1)); }
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(0, h);
+                    for(let i=0; i<curvePoints.length; i++) {
+                        const x = (i / (curvePoints.length - 1)) * w;
+                        const y = h - (curvePoints[i] * h * 0.5);
+                        const dist = Math.abs(x - cx);
+                        const warpY = y + (100 - dist) * 0.5;
+                        ctx.lineTo(x, Math.max(y, warpY));
+                    }
+                    ctx.lineTo(w, h);
+                    ctx.fillStyle = isDanger ? 'rgba(239, 68, 68, 0.1)' : 'rgba(6, 182, 212, 0.05)';
+                    ctx.fill();
+                    ctx.strokeStyle = isDanger ? 'rgba(239, 68, 68, 0.3)' : 'rgba(6, 182, 212, 0.2)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    ctx.restore();
+
+                    const startAngle = Math.PI * 0.75;
+                    const endAngle = Math.PI * 2.25;
+                    const totalAngle = endAngle - startAngle;
+                    const currentAngle = startAngle + (totalAngle * percentage);
+
+                    ctx.beginPath(); ctx.arc(cx, cy, radius, startAngle, endAngle); ctx.strokeStyle = '#111'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.stroke();
+                    const grad = ctx.createLinearGradient(0, h, w, 0);
+                    grad.addColorStop(0, '#06b6d4');
+                    grad.addColorStop(1, isDanger ? '#ef4444' : isOptimal ? '#d946ef' : '#06b6d4');
+                    ctx.beginPath(); ctx.arc(cx, cy, radius, startAngle, currentAngle); ctx.strokeStyle = grad; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.shadowBlur = 15; ctx.shadowColor = isDanger ? '#ef4444' : '#d946ef'; ctx.stroke(); ctx.shadowBlur = 0;
+
+                    const r2 = radius - 20;
+                    ctx.save(); ctx.translate(cx, cy); ctx.rotate(time * 0.5); ctx.beginPath(); ctx.arc(0, 0, r2, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 2; ctx.setLineDash([5, 15]); ctx.stroke();
+                    ctx.beginPath(); ctx.arc(0, 0, r2, 0, Math.PI * percentage); ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.stroke(); ctx.restore();
+
+                    const r3 = radius - 35;
+                    ctx.beginPath(); ctx.arc(cx, cy, r3, startAngle, endAngle); ctx.strokeStyle = '#220505'; ctx.lineWidth = 4; ctx.stroke();
+                    const neuralAngle = startAngle + (totalAngle * neuralLoad);
+                    const jitter = (Math.random() - 0.5) * (neuralLoad * 0.1);
+                    ctx.beginPath(); ctx.arc(cx, cy, r3, startAngle, neuralAngle + jitter); ctx.strokeStyle = neuralLoad > 0.8 ? '#ef4444' : '#333'; ctx.lineWidth = 4; ctx.stroke();
+
+                    const lensGrad = ctx.createRadialGradient(cx, cy - 40, 10, cx, cy, radius);
+                    lensGrad.addColorStop(0, 'rgba(255,255,255,0.1)'); lensGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = lensGrad; ctx.beginPath(); ctx.arc(cx, cy, radius + 10, 0, Math.PI * 2); ctx.fill();
+
+                    const scanY = cy + Math.sin(time * 2) * radius;
+                    ctx.fillStyle = 'rgba(6, 182, 212, 0.1)'; ctx.fillRect(cx - radius, scanY, radius * 2, 2);
+
+                    animId = requestAnimationFrame(render);
+                };
+                
+                const handleResize = () => {
+                    const rect = containerRef.current.getBoundingClientRect();
+                    const dpr = window.devicePixelRatio || 1;
+                    canvas.width = rect.width * dpr;
+                    canvas.height = rect.height * dpr;
+                    ctx.scale(dpr, dpr);
+                };
+                window.addEventListener('resize', handleResize);
+                handleResize();
+                render();
+                return () => cancelAnimationFrame(animId);
+            }, [percentage, neuralLoad]);
+
+            return (
+                <div className="relative w-full max-w-md bg-[#020202] border border-white/10 rounded-3xl flex flex-col transition-all duration-500 hover:border-cyan-500/30 shadow-2xl z-20 overflow-hidden group min-h-[680px]">
+                    <div className="bg-[#050505] px-6 py-4 border-b border-white/10 z-10 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2"><Brain className={aiState === 'ALERT' ? "text-red-500 animate-pulse" : "text-cyan-400"} size={18} /><h2 className="font-display font-bold text-white tracking-widest uppercase text-lg">OMNI.CORE</h2></div>
+                            <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border flex items-center gap-1 ${aiState === 'ALERT' ? 'border-red-500 text-red-500 bg-red-900/20' : aiState === 'OPTIMAL' ? 'border-fuchsia-500 text-fuchsia-500 bg-fuchsia-900/20' : 'border-cyan-500 text-cyan-500 bg-cyan-900/20'}`}><Activity size={10} className="animate-pulse"/> {aiState}</div>
+                        </div>
+                        <div className="bg-[#0a0a0a] border-l-2 border-cyan-500 pl-3 py-2 min-h-[3.5em] flex items-center shadow-[inset_0_0_20px_rgba(0,0,0,1)] relative"><p className="text-xs font-mono text-cyan-100 leading-relaxed z-10"><span className="text-cyan-600 font-bold mr-2">{">"}</span>{aiDisplay}<span className="animate-[blink_1s_infinite] bg-cyan-400 w-2 h-4 inline-block align-middle ml-1"></span></p></div>
+                    </div>
+                    <div className="relative bg-[#010101] flex-1 flex items-center justify-center p-4 overflow-hidden" ref={containerRef}>
+                        <canvas ref={canvasRef} className="relative z-10 w-full aspect-square max-w-[350px]" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none pt-6">
+                            <div className="text-[9px] font-mono text-gray-500 uppercase tracking-[0.2em] mb-1">AGGREGATE</div>
+                            <div className="text-5xl font-black text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] tabular-nums">{(displayVol/1000).toFixed(1)}<span className="text-xl text-gray-600 ml-1">k</span></div>
+                            <div className="flex gap-4 mt-2 border-t border-white/10 pt-2">
+                                <div className="text-center"><div className="text-[8px] text-cyan-500 font-bold">SETS</div><div className="text-xs text-white font-mono">{stats.sets}</div></div>
+                                <div className="text-center"><div className="text-[8px] text-fuchsia-500 font-bold">AVG</div><div className="text-xs text-white font-mono">{(volume/stats.sets).toFixed(0)}</div></div>
+                            </div>
+                        </div>
+                        <div className="absolute top-[15%] left-[8%] z-30 flex flex-col items-start"><div className="flex items-center gap-1 text-[9px] text-gray-500 font-bold uppercase"><Gauge size={10}/> Density</div><div className="text-sm font-bold text-cyan-400">{density.toFixed(0)}</div></div>
+                        <div className="absolute top-[15%] right-[8%] z-30 flex flex-col items-end"><div className="flex items-center gap-1 text-[9px] text-gray-500 font-bold uppercase">Time <Clock size={10}/></div><div className="text-sm font-bold text-fuchsia-400">{Math.floor(stats.tut/60)}m</div></div>
+                    </div>
+                    <div className="bg-[#080808] border-t border-white/10 p-5 relative z-10">
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-[#0f0f0f] rounded-xl p-2 border border-white/5 flex flex-col items-center group hover:border-yellow-500/30 transition-all"><Zap size={14} className="text-yellow-400 mb-1"/><span className="text-lg font-display font-bold text-white">{density.toFixed(0)}</span><span className="text-[8px] text-gray-500 uppercase">Kg/Min</span></div>
+                            <div className="bg-[#0f0f0f] rounded-xl p-2 border border-white/5 flex flex-col items-center group hover:border-fuchsia-500/30 transition-all"><Target size={14} className="text-fuchsia-400 mb-1"/><span className="text-lg font-display font-bold text-white">{(maxVolume/1000).toFixed(0)}k</span><span className="text-[8px] text-gray-500 uppercase">Target</span></div>
+                            <div className="bg-[#0f0f0f] rounded-xl p-2 border border-white/5 flex flex-col items-center group hover:border-green-500/30 transition-all"><CheckCircle2 size={14} className={isOptimal ? "text-green-400" : "text-gray-500"} mb-1/><span className={`text-lg font-display font-bold ${isOptimal ? 'text-green-400' : 'text-white'}`}>{Math.round(percentage*100)}%</span><span className="text-[8px] text-gray-500 uppercase">Capacity</span></div>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-1">
+                            <div className="flex justify-between text-[9px] font-bold text-gray-500"><span>XP PROGRESS</span><span>1850 / 2500</span></div>
+                            <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden border border-white/5"><div className="h-full bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-white w-[75%] shadow-[0_0_10px_rgba(217,70,239,0.8)] animate-pulse"></div></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const App = () => {
+            const [volume, setVolume] = useState(18500);
+            return (
+                <div className="min-h-screen bg-[#010101] text-white font-sans p-4 flex flex-col items-center gap-8">
+                    <h1 className="font-display text-2xl text-center text-cyan-400">STANDALONE PREVIEW V28</h1>
+                    <VolumeGaugeV28 volume={volume} maxVolume={25000} stats={{ sets: 45, tut: 2450, sessions: 4 }} />
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+=======
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>NEON FIT // STATISTIQUES</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
+  <style>
+    :root { 
+      --cyan: #00eaff; 
+      --magenta: #ff2d95; 
+      --dark-bg: #050510; 
+    }
+    
+    body { 
+      background-color: var(--dark-bg); 
+      font-family: 'Inter', sans-serif; 
+      color: white; 
+      padding-bottom: env(safe-area-inset-bottom); 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    .font-hud { font-family: 'Rajdhani', sans-serif; }
+    .font-mono-tech { font-family: 'Share Tech Mono', monospace; }
+    
+    .glow-text-cyan { text-shadow: 0 0 10px rgba(0, 234, 255, 0.6); }
+    
+    .touch-pop { 
+      transition: transform 0.1s, filter 0.1s; 
+      cursor: pointer; 
+    }
+    
+    .touch-pop:active { 
+      transform: scale(0.97); 
+      filter: brightness(1.3); 
+    }
+    
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-entry {
+      animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, rgba(0, 234, 255, 0.05) 0%, rgba(255, 45, 149, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+  </style>
+</head>
+
+<body class="antialiased pb-24">
+  <script>document.addEventListener("touchstart", function(){}, true);</script>
+  
+  <!-- Header -->
+  <header class="fixed top-0 w-full z-40 bg-[#050510]/95 backdrop-blur-md border-b border-white/10 pt-safe pb-3 shadow-2xl">
+    <div class="px-4 h-12 flex items-center justify-between mt-2">
+      <h1 class="text-xl font-hud font-black text-white italic tracking-wider">
+        STATISTIQUES
+      </h1>
+      
+      <button onclick="window.location.href='index.html'" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 touch-pop border border-white/10">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="pt-20 px-4 pb-32 space-y-6">
+    
+    <!-- Overview Stats -->
+    <section class="animate-entry" style="animation-delay: 0s;">
+      <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 pl-1">
+        Vue d'ensemble
+      </h2>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Total Workouts -->
+        <div class="stat-card">
+          <div class="relative z-10">
+            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+              Séances
+            </div>
+            <div class="text-3xl font-hud font-black text-[var(--cyan)] glow-text-cyan" id="stat-workouts">
+              0
+            </div>
+          </div>
+        </div>
+        
+        <!-- Total Sets -->
+        <div class="stat-card">
+          <div class="relative z-10">
+            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+              Séries
+            </div>
+            <div class="text-3xl font-hud font-black text-[var(--cyan)] glow-text-cyan" id="stat-sets">
+              0
+            </div>
+          </div>
+        </div>
+        
+        <!-- Total Volume -->
+        <div class="stat-card">
+          <div class="relative z-10">
+            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+              Volume Total
+            </div>
+            <div class="text-3xl font-hud font-black text-[var(--magenta)]" id="stat-volume">
+              0t
+            </div>
+          </div>
+        </div>
+        
+        <!-- Streak -->
+        <div class="stat-card">
+          <div class="relative z-10">
+            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+              Série Jours
+            </div>
+            <div class="text-3xl font-hud font-black text-orange-500 flex items-center gap-1">
+              <i data-lucide="flame" class="w-6 h-6 fill-orange-500/20"></i>
+              <span id="stat-streak">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Recent History -->
+    <section class="animate-entry" style="animation-delay: 0.1s;">
+      <div class="flex items-center justify-between mb-3 pl-1">
+        <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+          Historique Récent
+        </h2>
+        <button onclick="clearHistory()" class="text-[10px] font-bold text-red-500 hover:text-red-400 transition-colors touch-pop">
+          Effacer
+        </button>
+      </div>
+      
+      <div id="history-container" class="space-y-2">
+        <!-- History items injected here -->
+      </div>
+      
+      <div id="empty-state" class="hidden text-center py-12">
+        <i data-lucide="database" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+        <p class="text-sm text-slate-500">Aucun historique pour le moment</p>
+        <p class="text-xs text-slate-600 mt-1">Complétez votre première séance !</p>
+      </div>
+    </section>
+    
+    <!-- Export/Import -->
+    <section class="animate-entry" style="animation-delay: 0.2s;">
+      <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 pl-1">
+        Données
+      </h2>
+      
+      <div class="flex gap-3">
+        <button onclick="exportData()" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 touch-pop">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span class="text-sm font-bold">Exporter</span>
+        </button>
+        
+        <button onclick="importData()" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 touch-pop">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          <span class="text-sm font-bold">Importer</span>
+        </button>
+      </div>
+    </section>
+    
+  </main>
+  
+  <!-- Bottom Nav -->
+  <nav class="fixed bottom-5 left-4 right-4 h-16 bg-[#0a0a15]/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex justify-around items-center z-50 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+    <button onclick="window.location.href='index.html'" class="flex flex-col items-center gap-1 w-12 text-slate-500 hover:text-white transition-colors touch-pop">
+      <i data-lucide="layout-grid" class="w-6 h-6"></i>
+      <span class="text-[8px] font-bold uppercase">QG</span>
+    </button>
+    
+    <button onclick="window.location.href='workouts.html'" class="flex flex-col items-center gap-1 w-12 text-slate-500 hover:text-white transition-colors touch-pop">
+      <i data-lucide="target" class="w-6 h-6"></i>
+      <span class="text-[8px] font-bold uppercase">Ops</span>
+    </button>
+    
+    <!-- FAB -->
+    <div class="relative -top-6">
+      <button onclick="window.location.href='workouts.html'" class="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--magenta)] to-purple-700 flex items-center justify-center shadow-[0_0_25px_rgba(255,45,149,0.5)] border-4 border-[#050510] transition-transform active:scale-90 touch-pop">
+        <i data-lucide="zap" class="w-8 h-8 text-white fill-white"></i>
+      </button>
+    </div>
+
+    <button class="flex flex-col items-center gap-1 w-12 text-[var(--cyan)] touch-pop">
+      <i data-lucide="bar-chart-2" class="w-6 h-6 drop-shadow-[0_0_8px_rgba(0,234,255,0.6)]"></i>
+      <span class="text-[8px] font-bold uppercase">Stats</span>
+    </button>
+    
+    <button onclick="alert('Bientôt disponible')" class="flex flex-col items-center gap-1 w-12 text-slate-500 hover:text-white transition-colors touch-pop">
+      <i data-lucide="user-circle" class="w-6 h-6"></i>
+      <span class="text-[8px] font-bold uppercase">ID</span>
+    </button>
+  </nav>
+  
+  <script type="module">
+    import { WorkoutHistory, WorkoutStats } from './workout-history.js';
+    import { initIcons } from './app.js';
+    
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    function init() {
+      initIcons();
+      loadStats();
+      loadHistory();
+    }
+    
+    // ========================================
+    // LOAD STATISTICS
+    // ========================================
+    
+    function loadStats() {
+      // Overview stats
+      document.getElementById('stat-workouts').textContent = WorkoutStats.getTotalWorkouts();
+      document.getElementById('stat-sets').textContent = WorkoutStats.getTotalSets();
+      
+      const volume = WorkoutStats.getTotalVolume();
+      document.getElementById('stat-volume').textContent = (volume / 1000).toFixed(1) + 't';
+      
+      document.getElementById('stat-streak').textContent = WorkoutStats.getStreak();
+    }
+    
+    // ========================================
+    // LOAD HISTORY
+    // ========================================
+    
+    function loadHistory() {
+      const container = document.getElementById('history-container');
+      const emptyState = document.getElementById('empty-state');
+      const history = WorkoutHistory.getAll();
+      
+      if (history.length === 0) {
+        container.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      container.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      container.innerHTML = '';
+      
+      // Group by workout session (date + week + day)
+      const sessions = {};
+      
+      history.forEach(entry => {
+        const key = `${entry.date}-${entry.week}-${entry.day}`;
+        if (!sessions[key]) {
+          sessions[key] = {
+            date: entry.date,
+            week: entry.week,
+            day: entry.day,
+            sets: []
+          };
+        }
+        sessions[key].sets.push(entry);
+      });
+      
+      // Convert to array and sort by date (newest first)
+      const sessionList = Object.values(sessions).sort((a, b) => {
+        return new Date(b.date.split('/').reverse().join('-')) - 
+               new Date(a.date.split('/').reverse().join('-'));
+      });
+      
+      // Show last 20 sessions
+      sessionList.slice(0, 20).forEach((session, index) => {
+        const card = document.createElement('div');
+        card.className = 'bg-[#0f172a] border border-white/10 rounded-xl p-3 animate-entry';
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        const totalVolume = session.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
+        const exercises = new Set(session.sets.map(s => s.exercise)).size;
+        
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-[var(--cyan)]/10 border border-[var(--cyan)]/30 flex items-center justify-center">
+                <i data-lucide="calendar" class="w-4 h-4 text-[var(--cyan)]"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-white">${session.day.toUpperCase()}</div>
+                <div class="text-[10px] text-slate-500">Semaine ${session.week} • ${session.date}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs font-mono-tech font-bold text-white">${session.sets.length} sets</div>
+              <div class="text-[10px] text-slate-500">${exercises} exercices</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-white/5">
+            <div class="text-[10px] text-slate-500">Volume total</div>
+            <div class="text-sm font-bold text-[var(--magenta)]">${(totalVolume / 1000).toFixed(1)}t</div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+      
+      initIcons();
+    }
+    
+    // ========================================
+    // GLOBAL FUNCTIONS
+    // ========================================
+    
+    window.clearHistory = () => {
+      if (WorkoutHistory.clear()) {
+        loadStats();
+        loadHistory();
+      }
+    };
+    
+    window.exportData = () => {
+      const data = WorkoutHistory.export();
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `neon-fit-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    
+    window.importData = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (WorkoutHistory.import(event.target.result)) {
+            alert('Import réussi !');
+            loadStats();
+            loadHistory();
+          } else {
+            alert('Erreur lors de l\'import');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    };
+    
+    // ========================================
+    // START
+    // ========================================
+    
+    init();
+  </script>
+>>>>>>> 88d01e4 (🚧 WIP: Add all files (index & workouts need final versions))
+</body>
+</html>
